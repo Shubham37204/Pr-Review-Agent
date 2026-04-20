@@ -6,9 +6,9 @@ import { reviewChunk, mergeReviewResults } from "@/lib/groq/reviewPrompt";
 import { prisma } from "@/lib/prisma/client";
 import { Resend } from "resend";
 import type { ReviewResult } from "@/lib/groq/reviewPrompt";
-const resend = new Resend(process.env.RESEND_API_KEY);
-import type { Prisma } from "@prisma/client";
+import type { Prisma } from "@/generated/prisma";
 
+const resend = new Resend(process.env.RESEND_API_KEY);
 // Worker job processor
 async function processReviewJob(job: Job<ReviewJobData>) {
   const { reviewId, prUrl, userId, userEmail } = job.data;

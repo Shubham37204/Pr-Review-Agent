@@ -4,7 +4,7 @@ export type { ReviewJobData } from "@/lib/queue/reviewQueue";
 export type { DiffChunk } from "@/lib/github/chunkDiff";
 
 // Prisma enums re-exported for use in frontend without importing from @prisma/client
-export { ReviewStatus } from "@prisma/client";
+export { ReviewStatus } from "@/generated/prisma";
 
 // API response shapes
 export interface ApiResponse<T = unknown> {

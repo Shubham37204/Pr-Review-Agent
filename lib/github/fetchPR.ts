@@ -20,7 +20,6 @@ function parsePRUrl(url: string): {
 }
 
 export async function fetchPRData(prUrl: string): Promise<PRData> {
-
   const { owner, repo, number } = parsePRUrl(prUrl);
 
   const headers = {
@@ -28,12 +27,11 @@ export async function fetchPRData(prUrl: string): Promise<PRData> {
     Accept: "application/vnd.github.v3+json",
   };
 
-  // Fetch PR metadata
+  // Fetch 1 — metadata (JSON)
   const prRes = await fetch(
-    `https://api.github.com/repos/${owner}/${repo}/pulls/${number}.diff`,
-    { headers },
+    `https://api.github.com/repos/${owner}/${repo}/pulls/${number}`,
+    { headers }, // Accept: application/vnd.github.v3+json already in headers
   );
-
   if (!prRes.ok) {
     const remaining = prRes.headers.get("x-ratelimit-remaining");
     if (prRes.status === 403 && remaining === "0") {
@@ -44,10 +42,9 @@ export async function fetchPRData(prUrl: string): Promise<PRData> {
       `GitHub API error: ${prRes.status} on ${owner}/${repo}#${number}`,
     );
   }
-
   const pr = await prRes.json();
 
-  // Fetch diff
+  // Fetch 2 — diff (plain text)
   const diffRes = await fetch(
     `https://api.github.com/repos/${owner}/${repo}/pulls/${number}`,
     {
@@ -57,8 +54,15 @@ export async function fetchPRData(prUrl: string): Promise<PRData> {
       },
     },
   );
-  
-  if (!diffRes.ok) throw new Error("Failed to fetch PR diff");
+
+  if (!diffRes.ok) {
+    const remaining = diffRes.headers.get("x-ratelimit-remaining");
+    if (diffRes.status === 403 && remaining === "0") {
+      throw new Error("GitHub rate limit hit on diff fetch");
+    }
+    throw new Error(`Failed to fetch PR diff: ${diffRes.status}`);
+  }
+
   const diff = await diffRes.text();
 
   return {
