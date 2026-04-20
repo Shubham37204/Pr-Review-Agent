@@ -1,4 +1,4 @@
-import { reviewQueue, type ReviewJobData } from "./reviewQueue";
+import { reviewQueue, type ReviewJobData } from "@/lib/queue/reviewQueue";
 
 // Instruction: generate jobId as `review-${reviewId}` for deduplication
 // BullMQ will reject duplicate jobIds — prevents double processing

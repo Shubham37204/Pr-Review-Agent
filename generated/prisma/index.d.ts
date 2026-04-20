@@ -2147,6 +2147,7 @@ export namespace Prisma {
     chunksCount: number | null
     createdAt: Date | null
     updatedAt: Date | null
+    errorMessage: string | null
   }
 
   export type ReviewMaxAggregateOutputType = {
@@ -2159,6 +2160,7 @@ export namespace Prisma {
     chunksCount: number | null
     createdAt: Date | null
     updatedAt: Date | null
+    errorMessage: string | null
   }
 
   export type ReviewCountAggregateOutputType = {
@@ -2172,6 +2174,7 @@ export namespace Prisma {
     chunksCount: number
     createdAt: number
     updatedAt: number
+    errorMessage: number
     _all: number
   }
 
@@ -2196,6 +2199,7 @@ export namespace Prisma {
     chunksCount?: true
     createdAt?: true
     updatedAt?: true
+    errorMessage?: true
   }
 
   export type ReviewMaxAggregateInputType = {
@@ -2208,6 +2212,7 @@ export namespace Prisma {
     chunksCount?: true
     createdAt?: true
     updatedAt?: true
+    errorMessage?: true
   }
 
   export type ReviewCountAggregateInputType = {
@@ -2221,6 +2226,7 @@ export namespace Prisma {
     chunksCount?: true
     createdAt?: true
     updatedAt?: true
+    errorMessage?: true
     _all?: true
   }
 
@@ -2321,6 +2327,7 @@ export namespace Prisma {
     chunksCount: number | null
     createdAt: Date
     updatedAt: Date
+    errorMessage: string | null
     _count: ReviewCountAggregateOutputType | null
     _avg: ReviewAvgAggregateOutputType | null
     _sum: ReviewSumAggregateOutputType | null
@@ -2353,6 +2360,7 @@ export namespace Prisma {
     chunksCount?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    errorMessage?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["review"]>
 
@@ -2367,6 +2375,7 @@ export namespace Prisma {
     chunksCount?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    errorMessage?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["review"]>
 
@@ -2381,6 +2390,7 @@ export namespace Prisma {
     chunksCount?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    errorMessage?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["review"]>
 
@@ -2395,9 +2405,10 @@ export namespace Prisma {
     chunksCount?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    errorMessage?: boolean
   }
 
-  export type ReviewOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "prUrl" | "prTitle" | "status" | "result" | "linesCount" | "chunksCount" | "createdAt" | "updatedAt", ExtArgs["result"]["review"]>
+  export type ReviewOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "prUrl" | "prTitle" | "status" | "result" | "linesCount" | "chunksCount" | "createdAt" | "updatedAt" | "errorMessage", ExtArgs["result"]["review"]>
   export type ReviewInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
   }
@@ -2424,6 +2435,7 @@ export namespace Prisma {
       chunksCount: number | null
       createdAt: Date
       updatedAt: Date
+      errorMessage: string | null
     }, ExtArgs["result"]["review"]>
     composites: {}
   }
@@ -2858,6 +2870,7 @@ export namespace Prisma {
     readonly chunksCount: FieldRef<"Review", 'Int'>
     readonly createdAt: FieldRef<"Review", 'DateTime'>
     readonly updatedAt: FieldRef<"Review", 'DateTime'>
+    readonly errorMessage: FieldRef<"Review", 'String'>
   }
     
 
@@ -3312,7 +3325,8 @@ export namespace Prisma {
     linesCount: 'linesCount',
     chunksCount: 'chunksCount',
     createdAt: 'createdAt',
-    updatedAt: 'updatedAt'
+    updatedAt: 'updatedAt',
+    errorMessage: 'errorMessage'
   };
 
   export type ReviewScalarFieldEnum = (typeof ReviewScalarFieldEnum)[keyof typeof ReviewScalarFieldEnum]
@@ -3522,6 +3536,7 @@ export namespace Prisma {
     chunksCount?: IntNullableFilter<"Review"> | number | null
     createdAt?: DateTimeFilter<"Review"> | Date | string
     updatedAt?: DateTimeFilter<"Review"> | Date | string
+    errorMessage?: StringNullableFilter<"Review"> | string | null
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
   }
 
@@ -3536,6 +3551,7 @@ export namespace Prisma {
     chunksCount?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    errorMessage?: SortOrderInput | SortOrder
     user?: UserOrderByWithRelationInput
   }
 
@@ -3553,6 +3569,7 @@ export namespace Prisma {
     chunksCount?: IntNullableFilter<"Review"> | number | null
     createdAt?: DateTimeFilter<"Review"> | Date | string
     updatedAt?: DateTimeFilter<"Review"> | Date | string
+    errorMessage?: StringNullableFilter<"Review"> | string | null
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
   }, "id">
 
@@ -3567,6 +3584,7 @@ export namespace Prisma {
     chunksCount?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    errorMessage?: SortOrderInput | SortOrder
     _count?: ReviewCountOrderByAggregateInput
     _avg?: ReviewAvgOrderByAggregateInput
     _max?: ReviewMaxOrderByAggregateInput
@@ -3588,6 +3606,7 @@ export namespace Prisma {
     chunksCount?: IntNullableWithAggregatesFilter<"Review"> | number | null
     createdAt?: DateTimeWithAggregatesFilter<"Review"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Review"> | Date | string
+    errorMessage?: StringNullableWithAggregatesFilter<"Review"> | string | null
   }
 
   export type UserCreateInput = {
@@ -3660,6 +3679,7 @@ export namespace Prisma {
     chunksCount?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    errorMessage?: string | null
     user: UserCreateNestedOneWithoutReviewsInput
   }
 
@@ -3674,6 +3694,7 @@ export namespace Prisma {
     chunksCount?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    errorMessage?: string | null
   }
 
   export type ReviewUpdateInput = {
@@ -3686,6 +3707,7 @@ export namespace Prisma {
     chunksCount?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
     user?: UserUpdateOneRequiredWithoutReviewsNestedInput
   }
 
@@ -3700,6 +3722,7 @@ export namespace Prisma {
     chunksCount?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type ReviewCreateManyInput = {
@@ -3713,6 +3736,7 @@ export namespace Prisma {
     chunksCount?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    errorMessage?: string | null
   }
 
   export type ReviewUpdateManyMutationInput = {
@@ -3725,6 +3749,7 @@ export namespace Prisma {
     chunksCount?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type ReviewUncheckedUpdateManyInput = {
@@ -3738,6 +3763,7 @@ export namespace Prisma {
     chunksCount?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -3944,6 +3970,7 @@ export namespace Prisma {
     chunksCount?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    errorMessage?: SortOrder
   }
 
   export type ReviewAvgOrderByAggregateInput = {
@@ -3961,6 +3988,7 @@ export namespace Prisma {
     chunksCount?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    errorMessage?: SortOrder
   }
 
   export type ReviewMinOrderByAggregateInput = {
@@ -3973,6 +4001,7 @@ export namespace Prisma {
     chunksCount?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    errorMessage?: SortOrder
   }
 
   export type ReviewSumOrderByAggregateInput = {
@@ -4351,6 +4380,7 @@ export namespace Prisma {
     chunksCount?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    errorMessage?: string | null
   }
 
   export type ReviewUncheckedCreateWithoutUserInput = {
@@ -4363,6 +4393,7 @@ export namespace Prisma {
     chunksCount?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    errorMessage?: string | null
   }
 
   export type ReviewCreateOrConnectWithoutUserInput = {
@@ -4405,6 +4436,7 @@ export namespace Prisma {
     chunksCount?: IntNullableFilter<"Review"> | number | null
     createdAt?: DateTimeFilter<"Review"> | Date | string
     updatedAt?: DateTimeFilter<"Review"> | Date | string
+    errorMessage?: StringNullableFilter<"Review"> | string | null
   }
 
   export type UserCreateWithoutReviewsInput = {
@@ -4465,6 +4497,7 @@ export namespace Prisma {
     chunksCount?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    errorMessage?: string | null
   }
 
   export type ReviewUpdateWithoutUserInput = {
@@ -4477,6 +4510,7 @@ export namespace Prisma {
     chunksCount?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type ReviewUncheckedUpdateWithoutUserInput = {
@@ -4489,6 +4523,7 @@ export namespace Prisma {
     chunksCount?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type ReviewUncheckedUpdateManyWithoutUserInput = {
@@ -4501,6 +4536,7 @@ export namespace Prisma {
     chunksCount?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
 

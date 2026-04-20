@@ -138,7 +138,8 @@ exports.Prisma.ReviewScalarFieldEnum = {
   linesCount: 'linesCount',
   chunksCount: 'chunksCount',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  errorMessage: 'errorMessage'
 };
 
 exports.Prisma.SortOrder = {
