@@ -13,12 +13,16 @@ function parsePRUrl(url: string): {
   number: number;
 } {
   const match = url.match(/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)/);
+
   if (!match) throw new Error("Invalid GitHub PR URL");
+
   return { owner: match[1], repo: match[2], number: parseInt(match[3], 10) };
 }
 
 export async function fetchPRData(prUrl: string): Promise<PRData> {
+
   const { owner, repo, number } = parsePRUrl(prUrl);
+
   const headers = {
     Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
     Accept: "application/vnd.github.v3+json",
@@ -29,6 +33,7 @@ export async function fetchPRData(prUrl: string): Promise<PRData> {
     `https://api.github.com/repos/${owner}/${repo}/pulls/${number}.diff`,
     { headers },
   );
+
   if (!prRes.ok) {
     const remaining = prRes.headers.get("x-ratelimit-remaining");
     if (prRes.status === 403 && remaining === "0") {
@@ -39,6 +44,7 @@ export async function fetchPRData(prUrl: string): Promise<PRData> {
       `GitHub API error: ${prRes.status} on ${owner}/${repo}#${number}`,
     );
   }
+
   const pr = await prRes.json();
 
   // Fetch diff
@@ -51,6 +57,7 @@ export async function fetchPRData(prUrl: string): Promise<PRData> {
       },
     },
   );
+  
   if (!diffRes.ok) throw new Error("Failed to fetch PR diff");
   const diff = await diffRes.text();
 

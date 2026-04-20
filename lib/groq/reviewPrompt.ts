@@ -43,6 +43,7 @@ Severity rules:
 `;
 
 export async function reviewChunk(chunk: DiffChunk): Promise<ReviewResult> {
+
   try {
     const response = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
@@ -79,6 +80,7 @@ export async function reviewChunk(chunk: DiffChunk): Promise<ReviewResult> {
 
     // 2. Validate comments after parse
     const validSeverities = ["critical", "warning", "suggestion"];
+    
     const safeComments = (parsed.comments || []).filter(
       (c: ReviewComment) =>
         c &&
