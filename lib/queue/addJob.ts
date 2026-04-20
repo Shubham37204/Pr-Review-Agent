@@ -12,6 +12,8 @@ export async function addReviewJob(data: ReviewJobData): Promise<string> {
     jobId,
   });
 
-  //  Return job.id for tracking
-  return job.id!;
+  if (!job.id)
+    throw new Error(`Failed to enqueue job for review ${data.reviewId}`);
+  
+  return job.id;
 }

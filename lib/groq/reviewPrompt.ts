@@ -66,30 +66,46 @@ export async function reviewChunk(chunk: DiffChunk): Promise<ReviewResult> {
     let parsed: Omit<ReviewResult, "chunksProcessed">;
 
     try {
-      parsed = JSON.parse(raw);
+      const cleaned = raw
+        .replace(/^```json\s*/i, "")
+        .replace(/^```\s*/i, "")
+        .replace(/```$/i, "")
+        .trim();
+      parsed = JSON.parse(cleaned);
     } catch (err) {
       console.error("Raw AI response:", raw);
       throw new Error(`JSON parse failed for chunk ${chunk.index}`);
     }
 
+    // 2. Validate comments after parse
+    const validSeverities = ["critical", "warning", "suggestion"];
+    const safeComments = (parsed.comments || []).filter(
+      (c: ReviewComment) =>
+        c &&
+        typeof c.issue === "string" &&
+        typeof c.file === "string" &&
+        typeof c.recommendation === "string" &&
+        validSeverities.includes(c.severity),
+    );
+
     return {
       summary: parsed.summary || "",
-      comments: parsed.comments || [],
-      score: parsed.score ?? 0,
+      comments: safeComments, // ← use safeComments, not parsed.comments
+      score: Math.min(100, Math.max(0, Number(parsed.score) || 0)),
       chunksProcessed: 1,
     };
   } catch (error) {
     throw new Error(
       `reviewChunk failed at chunk ${chunk.index}: ${
         error instanceof Error ? error.message : "Unknown error"
-      }`
+      }`,
     );
   }
 }
 
 export function mergeReviewResults(
   results: ReviewResult[],
-  totalChunks: number
+  totalChunks: number,
 ): ReviewResult {
   if (!results.length) {
     return {

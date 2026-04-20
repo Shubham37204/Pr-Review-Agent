@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma/client";
 import { Resend } from "resend";
 import type { ReviewResult } from "@/lib/groq/reviewPrompt";
 const resend = new Resend(process.env.RESEND_API_KEY);
+import type { Prisma } from "@prisma/client";
 
 // Worker job processor
 async function processReviewJob(job: Job<ReviewJobData>) {
@@ -36,7 +37,7 @@ async function processReviewJob(job: Job<ReviewJobData>) {
     const totalLines = prData.diff.split("\n").length;
 
     console.log(
-      `[Worker] Review ${reviewId}: ${chunks.length} chunks, ${totalLines} lines`
+      `[Worker] Review ${reviewId}: ${chunks.length} chunks, ${totalLines} lines`,
     );
 
     // 4. Initial progress
@@ -52,10 +53,7 @@ async function processReviewJob(job: Job<ReviewJobData>) {
         const result = await reviewChunk(chunk);
         results.push(result);
       } catch (err) {
-        console.warn(
-          `[Worker] Chunk ${i} failed for review ${reviewId}:`,
-          err
-        );
+        console.warn(`[Worker] Chunk ${i} failed for review ${reviewId}:`, err);
       }
 
       // update progress (10 → 90)
@@ -64,14 +62,14 @@ async function processReviewJob(job: Job<ReviewJobData>) {
     }
 
     // 6. Merge results
-    const finalResult = mergeReviewResults(results);
+    const finalResult = mergeReviewResults(results, chunks.length);
 
     // 7. Save to DB
     await prisma.review.update({
       where: { id: reviewId },
       data: {
         status: "COMPLETED",
-        result: finalResult,
+        result: finalResult as unknown as Prisma.InputJsonValue,
         linesCount: totalLines,
         chunksCount: chunks.length,
       },
@@ -86,7 +84,7 @@ async function processReviewJob(job: Job<ReviewJobData>) {
         html: `
           <p>Your PR review is ready 🎉</p>
           <p>Summary:</p>
-          <pre>${JSON.stringify(finalResult.summary || {}, null, 2)}</pre>
+          <p>${finalResult.summary}</p>
           <p>
             View full review:
             <a href="${process.env.NEXT_PUBLIC_APP_URL}/review/${reviewId}">
@@ -96,10 +94,7 @@ async function processReviewJob(job: Job<ReviewJobData>) {
         `,
       });
     } catch (err) {
-      console.error(
-        `[Worker] Email failed for review ${reviewId}:`,
-        err
-      );
+      console.error(`[Worker] Email failed for review ${reviewId}:`, err);
     }
 
     // 9. Increment user usage
@@ -127,22 +122,22 @@ export const reviewWorker = new Worker<ReviewJobData>(
   {
     connection: redisConnection,
     concurrency: 2,
-  }
+  },
 );
 
 // Handle failed jobs
 reviewWorker.on("failed", async (job, err) => {
-  if (job?.data?.reviewId) {
-    await prisma.review.update({
-      where: { id: job.data.reviewId },
-      data: { status: "FAILED" },
-    });
+  try {
+    if (job?.data?.reviewId) {
+      await prisma.review.update({
+        where: { id: job.data.reviewId },
+        data: { status: "FAILED" },
+      });
+    }
+    console.error(`[ReviewWorker] Job failed: ${job?.id}`, err.message);
+  } catch (dbErr) {
+    console.error("[ReviewWorker] Failed to update failed status:", dbErr);
   }
-
-  console.error(
-    `[ReviewWorker] Job failed: ${job?.id}`,
-    err.message
-  );
 });
 
 // Global worker error (do NOT crash)

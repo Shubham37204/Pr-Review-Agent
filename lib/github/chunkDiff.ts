@@ -8,6 +8,9 @@ const MAX_TOKENS_PER_CHUNK = 3000; // safe limit for Groq free tier
 const AVG_CHARS_PER_TOKEN = 4;
 
 export function chunkDiff(diff: string): DiffChunk[] {
+  if (!diff || diff.trim().length === 0) {
+    throw new Error("PR diff is empty — possibly a binary-only PR");
+  }
   // Split by file boundaries (each file starts with "diff --git")
   const files = diff.split(/(?=diff --git )/).filter(Boolean);
   const chunks: DiffChunk[] = [];
@@ -30,12 +33,22 @@ export function chunkDiff(diff: string): DiffChunk[] {
             chunks.push({
               index: chunkIndex++,
               content: currentChunk,
-              tokenEstimate: Math.ceil(currentChunk.length / AVG_CHARS_PER_TOKEN),
+              tokenEstimate: Math.ceil(
+                currentChunk.length / AVG_CHARS_PER_TOKEN,
+              ),
             });
             currentChunk = "";
           }
         }
         currentChunk += hunk;
+      }
+      if (currentChunk) {
+        chunks.push({
+          index: chunkIndex++,
+          content: currentChunk,
+          tokenEstimate: Math.ceil(currentChunk.length / AVG_CHARS_PER_TOKEN),
+        });
+        currentChunk = ""; // reset so next file starts clean
       }
       continue;
     }

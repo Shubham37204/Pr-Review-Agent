@@ -13,6 +13,10 @@ export const redisConnection = new Redis(process.env.UPSTASH_REDIS_URL, {
   tls: {},                    // Upstash requires TLS
 });
 
+redisConnection.on("error", (err) => {
+  console.error("[Redis] Connection error:", err.message);
+});
+
 // Job data type
 export interface ReviewJobData {
   reviewId: string;   // Prisma review record ID
@@ -34,8 +38,3 @@ export const reviewQueue = new Queue<ReviewJobData>("pr-review", {
     removeOnFail: 50,
   },
 });
-
-// Helper function to add jobs (optional but useful)
-export async function addReviewJob(data: ReviewJobData) {
-  await reviewQueue.add("review-job", data);
-}
