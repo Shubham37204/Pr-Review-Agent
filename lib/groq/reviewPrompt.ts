@@ -114,7 +114,7 @@ export function mergeReviewResults(
     summary:"No review results available",
     comments: [], 
     score: 0,
-    chunksProcessed: totalChunks,
+    chunksProcessed: 0,
     };
   }
 

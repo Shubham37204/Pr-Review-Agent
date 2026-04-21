@@ -1,5 +1,6 @@
 import { Queue } from "bullmq";
 import { Redis } from "ioredis";
+import { logger } from "@/lib/logger";
 
 // Use UPSTASH_REDIS_URL (NOT REST URL)
 if (!process.env.UPSTASH_REDIS_URL) {
@@ -9,17 +10,17 @@ if (!process.env.UPSTASH_REDIS_URL) {
 // Proper Redis connection for BullMQ + Upstash
 export const redisConnection = new Redis(process.env.UPSTASH_REDIS_URL, {
   maxRetriesPerRequest: null, // required for BullMQ
-  enableReadyCheck: false,    // required for Upstash
-  tls: {},                    // Upstash requires TLS
+  enableReadyCheck: false, // required for Upstash
+  tls: {}, // Upstash requires TLS
 });
 
 redisConnection.on("error", (err) => {
-  console.error("[Redis] Connection error:", err.message);
+  logger.error("Redis connection error", { message: err.message });
 });
 
 // Job data type
 export interface ReviewJobData {
-  reviewId: string;   // Prisma review record ID
+  reviewId: string; // Prisma review record ID
   prUrl: string;
   userId: string;
   userEmail: string;

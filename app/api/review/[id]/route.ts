@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { logger } from "@/lib/logger";
 
 interface ReviewResponse {
   id: string;
@@ -16,8 +17,9 @@ interface ReviewResponse {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  let reviewId: string | undefined;
   try {
     // 1. Auth check
     const { userId } = await auth();
@@ -80,9 +82,15 @@ export async function GET(
     }
 
     return NextResponse.json(responseData, { status: 200 });
-
   } catch (error) {
-    console.error("GET /api/review/[id] error:", { error, url: req.url });
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    logger.error("GET /api/review/[id] failed", {
+      reviewId,
+      url: req.url,
+      error,
+    });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }

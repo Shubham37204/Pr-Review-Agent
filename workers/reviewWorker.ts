@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma/client";
 import { Resend } from "resend";
 import type { ReviewResult } from "@/lib/groq/reviewPrompt";
 import type { Prisma } from "@/generated/prisma";
+import { logger } from "@/lib/logger";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -38,7 +39,11 @@ async function processReviewJob(job: Job<ReviewJobData>) {
     const totalLines = prData.diff.split("\n").length;
 
     console.log(
-      `[Worker] Review ${reviewId}: ${chunks.length} chunks, ${totalLines} lines`,
+      logger.info("Review started", {
+        reviewId,
+        chunks: chunks.length,
+        lines: totalLines,
+      }),
     );
 
     // 4. Initial progress
@@ -54,7 +59,7 @@ async function processReviewJob(job: Job<ReviewJobData>) {
         const result = await reviewChunk(chunk);
         results.push(result);
       } catch (err) {
-        console.warn(`[Worker] Chunk ${i} failed for review ${reviewId}:`, err);
+        logger.warn("Chunk failed", { reviewId, chunkIndex: i });
       }
 
       // update progress (10 → 90)
@@ -111,7 +116,7 @@ async function processReviewJob(job: Job<ReviewJobData>) {
     // 10. Done
     await job.updateProgress(100);
   } catch (error) {
-    console.error(`[Worker] Job failed for review ${reviewId}:`, error);
+    logger.error("Job failed", { reviewId, error });
     throw error; // let BullMQ handle retries
   }
 }
@@ -137,11 +142,11 @@ reviewWorker.on("failed", async (job, err) => {
     }
     console.error(`[ReviewWorker] Job failed: ${job?.id}`, err.message);
   } catch (dbErr) {
-    console.error("[ReviewWorker] Failed to update failed status:", dbErr);
+    logger.error("Failed to update review status to FAILED", { error: dbErr });
   }
 });
 
 // Global worker error (do NOT crash)
 reviewWorker.on("error", (err) => {
-  console.error("[ReviewWorker] Error:", err);
+  logger.error("Worker error", { error: err });
 });

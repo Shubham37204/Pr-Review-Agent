@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma/client";
 import { addReviewJob } from "@/lib/queue/addJob";
+import { logger } from "@/lib/logger";
 
 const ReviewRequestSchema = z.object({
   prUrl: z
@@ -137,7 +138,7 @@ export async function POST(req: NextRequest) {
       },
     );
   } catch (error) {
-    console.error("Error in POST /api/review:", { url: req.url, error });
+    logger.error("POST /api/review failed", { url: req.url, error });
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },

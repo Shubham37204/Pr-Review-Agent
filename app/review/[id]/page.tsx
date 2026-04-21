@@ -144,12 +144,12 @@ export default function ReviewPage() {
   // diff removed from deps — fetchDiff sets it internally
   // isDiffLoading guard inside fetchDiff prevents re-entry
   useEffect(() => {
-    if (state.status === "completed" && diff === null) {
+    if (state.status === "completed") {
       Promise.resolve().then(() => {
         fetchDiff();
       });
     }
-  }, [state.status, diff, fetchDiff]);
+  }, [state.status, fetchDiff]);
 
   if (state.status === "loading") {
     return <div>Loading review...</div>;
