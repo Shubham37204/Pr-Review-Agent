@@ -4,7 +4,6 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma/client";
 import { addReviewJob } from "@/lib/queue/addJob";
 
-// Zod schema — validate input strictly
 const ReviewRequestSchema = z.object({
   prUrl: z
     .string()
@@ -15,25 +14,22 @@ const ReviewRequestSchema = z.object({
     ),
 });
 
-// Rate limit config
 const DAILY_REVIEW_LIMIT = 10;
 
 export async function POST(req: NextRequest) {
   try {
-    // 1. Get userId from Clerk
+    // 1. Auth
     const { userId } = await auth();
-
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
     const clerkUser = await currentUser();
     const userEmail = clerkUser?.emailAddresses?.[0]?.emailAddress ?? "";
 
-    // 2. Parse & validate request body
+    // 2. Validate body
     const body = await req.json();
-
     const parsed = ReviewRequestSchema.safeParse(body);
-
     if (!parsed.success) {
       return NextResponse.json(
         { error: parsed.error.flatten() },
@@ -53,23 +49,29 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 4. Check daily usage limit
+    // 4. Daily limit check — 429 with full rate limit headers
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     const reviewCountToday = await prisma.review.count({
       where: {
         userId: user.id,
-        createdAt: {
-          gte: today,
-        },
+        createdAt: { gte: today },
       },
     });
 
     if (reviewCountToday >= DAILY_REVIEW_LIMIT) {
       return NextResponse.json(
         { error: "Daily review limit reached" },
-        { status: 429 },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Limit": String(DAILY_REVIEW_LIMIT),
+            "X-RateLimit-Remaining": "0",
+            "X-RateLimit-Reset": String(new Date().setUTCHours(24, 0, 0, 0)),
+            "Retry-After": "86400",
+          },
+        },
       );
     }
 
@@ -82,7 +84,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 6. Add job to queue
+    // 6. Enqueue job — rollback on queue failure
     try {
       await addReviewJob({
         reviewId: review.id,
@@ -92,23 +94,25 @@ export async function POST(req: NextRequest) {
       });
     } catch (queueErr) {
       await prisma.review.delete({ where: { id: review.id } });
-      throw queueErr; // caught by outer try/catch → 500
+      throw queueErr;
     }
 
-    // 7. Return 202 Accepted
+    // 7. Return 202 with rate limit headers
+    const remaining = DAILY_REVIEW_LIMIT - (reviewCountToday + 1);
+
     return NextResponse.json(
+      { reviewId: review.id, message: "Review queued" },
       {
-        reviewId: review.id,
-        message: "Review queued",
+        status: 202,
+        headers: {
+          "X-RateLimit-Limit": String(DAILY_REVIEW_LIMIT),
+          "X-RateLimit-Remaining": String(Math.max(0, remaining)),
+          "X-RateLimit-Reset": String(new Date().setUTCHours(24, 0, 0, 0)),
+        },
       },
-      { status: 202 },
     );
   } catch (error) {
-    console.error("Error in POST /api/review:", {
-      url: req.url,
-      error,
-    });
-
+    console.error("Error in POST /api/review:", { url: req.url, error });
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },
