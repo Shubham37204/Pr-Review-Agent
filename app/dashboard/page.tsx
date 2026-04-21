@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { prisma } from "@/lib/prisma/client";
@@ -15,7 +15,6 @@ interface DashboardSearchParams {
   sort?: "newest" | "oldest" | "score";
 }
 
-// Local type for score extraction only — does not conflict with exported ReviewResult
 type ReviewScoreShape = {
   score?: number;
 };
@@ -25,45 +24,69 @@ export default async function DashboardPage({
 }: {
   searchParams: Promise<DashboardSearchParams>;
 }) {
+  // 1. Auth check
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
-  const user = await prisma.user.findUnique({
-    where: { clerkId: userId! },
-  });
-  if (!user) redirect("/sign-in");
+  // 2. Get email from Clerk
+  const clerkUser = await currentUser();
+  const userEmail = clerkUser?.emailAddresses?.[0]?.emailAddress ?? "";
 
+  // 3. Find or create user in DB
+  let user;
+  try {
+    user = await prisma.user.upsert({
+      where: { clerkId: userId! },
+      update: {},
+      create: {
+        clerkId: userId!,
+        email: userEmail,
+      },
+    });
+  } catch (err) {
+    console.error("=== DB ERROR ===", err);
+    throw err;
+  }
+
+  // 4. Resolve search params
   const { status, sort } = await searchParams;
 
+  // 5. Dynamic filter
   const whereClause = {
     userId: user.id,
     ...(status ? { status } : {}),
   };
 
+  // 6. Order
   const orderBy =
     sort === "oldest"
       ? { createdAt: "asc" as const }
       : { createdAt: "desc" as const };
 
-  // Fetch result field only when needed for score sorting
-  // Avoids loading full AI review JSON for every card in list view
-  let reviews = await prisma.review.findMany({
-    where: whereClause,
-    orderBy,
-    select: {
-      id: true,
-      status: true,
-      prUrl: true,
-      prTitle: true,
-      linesCount: true,
-      chunksCount: true,
-      createdAt: true,
-      updatedAt: true,
-      ...(sort === "score" ? { result: true } : {}),
-    },
-  });
+  // 7. Fetch reviews
+  let reviews;
+  try {
+    reviews = await prisma.review.findMany({
+      where: whereClause,
+      orderBy,
+      select: {
+        id: true,
+        status: true,
+        prUrl: true,
+        prTitle: true,
+        linesCount: true,
+        chunksCount: true,
+        createdAt: true,
+        updatedAt: true,
+        ...(sort === "score" ? { result: true } : {}),
+      },
+    });
+  } catch (err) {
+    console.error("=== REVIEWS FETCH ERROR ===", err);
+    throw err;
+  }
 
-  // Score sort — JS level since score is inside JSON field
+  // 8. Score sort — JS level since score is inside JSON field
   if (sort === "score") {
     reviews = reviews.sort((a, b) => {
       const scoreA = (a.result as ReviewScoreShape | null)?.score ?? 0;
@@ -72,12 +95,21 @@ export default async function DashboardPage({
     });
   }
 
+  // 9. Daily usage count
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const reviewCountToday = await prisma.review.count({
-    where: { userId: user.id, createdAt: { gte: today } },
-  });
+  let reviewCountToday = 0;
+  try {
+    reviewCountToday = await prisma.review.count({
+      where: {
+        userId: user.id,
+        createdAt: { gte: today },
+      },
+    });
+  } catch (err) {
+    console.error("=== COUNT ERROR ===", err);
+  }
 
   return (
     <div>
@@ -93,7 +125,6 @@ export default async function DashboardPage({
             Usage today: {reviewCountToday} / {DAILY_REVIEW_LIMIT}
           </p>
 
-          {/* Suspense required for useSearchParams inside FilterBar */}
           <Suspense fallback={<div>Loading filters...</div>}>
             <FilterBar currentStatus={status} currentSort={sort} />
           </Suspense>
