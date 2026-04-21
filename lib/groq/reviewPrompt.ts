@@ -111,10 +111,10 @@ export function mergeReviewResults(
 ): ReviewResult {
   if (!results.length) {
     return {
-       summary: string,
-  comments: ReviewComment[], // ← array of comments
-  score: number,
-  chunksProcessed: number,
+    summary:"No review results available",
+    comments: [], 
+    score: 0,
+    chunksProcessed: totalChunks,
     };
   }
 

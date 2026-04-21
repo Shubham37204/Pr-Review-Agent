@@ -5,7 +5,6 @@ import crypto from "crypto";
 
 const GITHUB_WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET!;
 
-// ✅ Verify GitHub signature
 async function verifyGitHubSignature(
   req: NextRequest,
   rawBody: string,

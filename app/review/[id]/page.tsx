@@ -1,12 +1,10 @@
 "use client";
 
-import { useEffect, useReducer, useCallback } from "react";
+import { useEffect, useReducer, useCallback, useState } from "react";
 import { useParams } from "next/navigation";
 import type { ReviewResult, ReviewComment } from "@/types";
 import SeverityBadge from "@/components/review/SeverityBadge";
-
-// DiffViewer intentionally excluded until GET /api/review/[id]/diff
-// is implemented in Phase 4 — see Option 2 decision
+import DiffViewer from "@/components/review/DiffViewer";
 
 interface ReviewData {
   id: string;
@@ -35,7 +33,7 @@ type ReviewPageAction =
 
 function reviewReducer(
   state: ReviewPageState,
-  action: ReviewPageAction
+  action: ReviewPageAction,
 ): ReviewPageState {
   switch (action.type) {
     case "FETCH_START":
@@ -87,12 +85,19 @@ export default function ReviewPage() {
     error: null,
   });
 
+  const [diff, setDiff] = useState<string | null>(null);
+  const [isDiffLoading, setIsDiffLoading] = useState(false);
+
   const fetchReview = useCallback(async () => {
     try {
       dispatch({ type: "FETCH_START" });
+
       const res = await fetch(`/api/review/${reviewId}`);
+
       if (!res.ok) throw new Error("Failed to fetch review");
+
       const data: ReviewData = await res.json();
+
       dispatch({ type: "FETCH_SUCCESS", payload: data });
     } catch (err: unknown) {
       dispatch({
@@ -102,7 +107,28 @@ export default function ReviewPage() {
     }
   }, [reviewId]);
 
-  // Initial fetch
+  // isDiffLoading in deps — prevents concurrent fetches
+  const fetchDiff = useCallback(async () => {
+    if (isDiffLoading) return;
+    try {
+      setIsDiffLoading(true);
+
+      const res = await fetch(`/api/review/${reviewId}/diff`);
+
+      if (res.ok) {
+        const data = await res.json();
+        setDiff(data.diff);
+      } else {
+        console.warn("Diff unavailable — status:", res.status);
+      }
+    } catch (err) {
+      console.warn("Diff fetch error:", err);
+    } finally {
+      setIsDiffLoading(false);
+    }
+  }, [reviewId]);
+
+  // Initial fetch on mount
   useEffect(() => {
     fetchReview();
   }, [fetchReview]);
@@ -113,6 +139,17 @@ export default function ReviewPage() {
     const interval = setInterval(fetchReview, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [state.status, fetchReview]);
+
+  // Fetch diff once when completed
+  // diff removed from deps — fetchDiff sets it internally
+  // isDiffLoading guard inside fetchDiff prevents re-entry
+  useEffect(() => {
+    if (state.status === "completed" && diff === null) {
+      Promise.resolve().then(() => {
+        fetchDiff();
+      });
+    }
+  }, [state.status, diff, fetchDiff]);
 
   if (state.status === "loading") {
     return <div>Loading review...</div>;
@@ -147,19 +184,14 @@ export default function ReviewPage() {
       <div>
         <h1>{state.review.prTitle || "Review Result"}</h1>
 
-        {/* Score */}
         <h2>Score: {result.score}/100</h2>
-
-        {/* Summary */}
         <p>{result.summary}</p>
 
-        {/* Stats */}
         <p>
-          Lines reviewed: {state.review.linesCount ?? "-"} | Chunks
-          processed: {result.chunksProcessed}
+          Lines reviewed: {state.review.linesCount ?? "-"} | Chunks processed:{" "}
+          {result.chunksProcessed}
         </p>
 
-        {/* Severity breakdown */}
         <div style={{ display: "flex", gap: "8px", margin: "12px 0" }}>
           {(["critical", "warning", "suggestion"] as const).map((sev) => (
             <SeverityBadge
@@ -170,7 +202,6 @@ export default function ReviewPage() {
           ))}
         </div>
 
-        {/* Comments — synced with ReviewResult.comments from Phase 2 */}
         <div>
           {result.comments.map((comment: ReviewComment, index: number) => (
             <div
@@ -188,15 +219,17 @@ export default function ReviewPage() {
                 {comment.line ? ` — line ${comment.line}` : ""}
               </p>
               <p>{comment.issue}</p>
-              <p style={{ color: "#555" }}>
-                💡 {comment.recommendation}
-              </p>
+              <p style={{ color: "#555" }}>💡 {comment.recommendation}</p>
             </div>
           ))}
         </div>
 
-        {/* DiffViewer deferred to Phase 4 */}
-        {/* Will be added once GET /api/review/[id]/diff endpoint exists */}
+        <div style={{ marginTop: "20px" }}>
+          <h2>Code Diff</h2>
+          {isDiffLoading && <p>Loading diff...</p>}
+          {diff && <DiffViewer diff={diff} highlightedLines={[]} />}
+          {!isDiffLoading && !diff && <p>Diff unavailable</p>}
+        </div>
       </div>
     );
   }

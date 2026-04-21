@@ -21,6 +21,7 @@ export async function GET(
   try {
     // 1. Auth check
     const { userId } = await auth();
+
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -42,7 +43,6 @@ export async function GET(
         userId: true,
         prUrl: true,
         prTitle: true,
-        // error field removed — not in schema
       },
     });
 

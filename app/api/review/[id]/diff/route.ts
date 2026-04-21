@@ -19,6 +19,7 @@ export async function GET(
 
     // 2. Await params
     const resolvedParams = await params;
+
     reviewId = resolvedParams.id;
 
     if (!reviewId) {
@@ -72,6 +73,7 @@ export async function GET(
     response.headers.set("Cache-Control", "private, max-age=3600");
 
     return response;
+    
   } catch (error) {
     console.error("Error fetching diff:", {
       reviewId,

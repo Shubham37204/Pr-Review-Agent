@@ -53,6 +53,7 @@ export async function GET() {
 
     return NextResponse.json(response, { status: httpStatus });
   } catch (error) {
+    
     // Edge fallback (should rarely hit because of allSettled)
     console.error("Health check failed:", error);
 

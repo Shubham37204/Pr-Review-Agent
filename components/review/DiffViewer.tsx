@@ -37,10 +37,10 @@ export default function DiffViewer({
   diff,
   highlightedLines = [],
 }: DiffViewerProps) {
-  // ✅ Hook must always run
+  //  Hook must always run
   const lines = useMemo(() => parseDiff(diff || ""), [diff]);
 
-  // ✅ Safe guard AFTER hooks
+  //  Safe guard AFTER hooks
   if (!diff) return null;
 
   return (

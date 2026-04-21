@@ -12,6 +12,7 @@ const ReviewRequestSchema = z.object({
       /github\.com\/[^/]+\/[^/]+\/pull\/\d+/,
       "Must be a valid GitHub PR URL",
     ),
+  forceReview: z.boolean().optional().default(false),
 });
 
 const DAILY_REVIEW_LIMIT = 10;
@@ -20,6 +21,7 @@ export async function POST(req: NextRequest) {
   try {
     // 1. Auth
     const { userId } = await auth();
+
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -30,6 +32,7 @@ export async function POST(req: NextRequest) {
     // 2. Validate body
     const body = await req.json();
     const parsed = ReviewRequestSchema.safeParse(body);
+
     if (!parsed.success) {
       return NextResponse.json(
         { error: parsed.error.flatten() },
@@ -37,7 +40,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { prUrl } = parsed.data;
+    const { prUrl, forceReview } = parsed.data;
 
     // 3. Find or create user
     const user = await prisma.user.upsert({
@@ -49,7 +52,29 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 4. Daily limit check — 429 with full rate limit headers
+    // Returns 409 Conflict — correct HTTP semantic for "resource already exists"
+    const existingReview = await prisma.review.findFirst({
+      where: {
+        userId: user.id,
+        prUrl,
+        status: { in: ["COMPLETED", "PENDING", "PROCESSING"] },
+      },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, status: true },
+    });
+
+    if (existingReview && !forceReview) {
+      return NextResponse.json(
+        {
+          existingReviewId: existingReview.id,
+          status: existingReview.status,
+          message: "PR already reviewed",
+        },
+        { status: 409 },
+      );
+    }
+
+    // 4. Daily limit check
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -84,7 +109,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 6. Enqueue job — rollback on queue failure
+    // 6. Enqueue job — rollback on failure
     try {
       await addReviewJob({
         reviewId: review.id,
