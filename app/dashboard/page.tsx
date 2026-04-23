@@ -2,14 +2,14 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { prisma } from "@/lib/prisma/client";
-import ReviewList from "@/components/review/ReviewList";
 import PRInputForm from "@/components/review/PRInputForm";
-import FilterBar from "@/components/review/FilterBar";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { OverviewCharts } from "@/components/dashboard/OverviewCharts";
 import { ActivityFeed, type Activity } from "@/components/dashboard/ActivityFeed";
-import { Activity as ActivityIcon, Code, History, Star } from "lucide-react";
+import { Activity as ActivityIcon, Code, History, Star, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+
+export const dynamic = "force-dynamic";
 
 const DAILY_REVIEW_LIMIT = 10;
 
@@ -30,19 +30,51 @@ export default async function DashboardPage({
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
+  return (
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Engineering Dashboard</h1>
+          <p className="text-muted-foreground">Monitor your PR review insights and quality trends.</p>
+        </div>
+        <PRInputForm />
+      </div>
+
+      <Suspense 
+        fallback={
+          <div className="flex flex-col items-center justify-center min-h-[50vh]">
+            <Loader2 className="w-8 h-8 animate-spin text-primary/50 mb-4" />
+            <p className="text-muted-foreground animate-pulse">Gathering insights...</p>
+          </div>
+        }
+      >
+        <DashboardContent userId={userId} searchParamsPromise={searchParams} />
+      </Suspense>
+    </div>
+  );
+}
+
+async function DashboardContent({ 
+  userId, 
+  searchParamsPromise 
+}: { 
+  userId: string;
+  searchParamsPromise: Promise<DashboardSearchParams>;
+}) {
   const clerkUser = await currentUser();
   const userEmail = clerkUser?.emailAddresses?.[0]?.emailAddress ?? "";
 
   const user = await prisma.user.upsert({
-    where: { clerkId: userId! },
+    where: { clerkId: userId },
     update: {},
     create: {
-      clerkId: userId!,
+      clerkId: userId,
       email: userEmail,
     },
   });
 
-  const { status, sort } = await searchParams;
+  const searchParams = await searchParamsPromise;
+  const { status, sort } = searchParams;
 
   const whereClause = {
     userId: user.id,
@@ -100,15 +132,7 @@ export default async function DashboardPage({
     : 0;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Engineering Dashboard</h1>
-          <p className="text-muted-foreground">Monitor your PR review insights and quality trends.</p>
-        </div>
-        <PRInputForm />
-      </div>
-
+    <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard 
           title="Daily Usage" 
@@ -143,7 +167,7 @@ export default async function DashboardPage({
           <OverviewCharts reviews={finalReviews} />
         </div>
         <div className="lg:col-span-1">
-          <ActivityFeed activities={finalReviews.slice(0, 5).map(review => ({
+          <ActivityFeed activities={finalReviews.slice(0, 8).map(review => ({
             id: review.id,
             type: review.status.toLowerCase(),
             title: review.status === "COMPLETED" ? "Review Completed" : `Review ${review.status.charAt(0) + review.status.slice(1).toLowerCase()}`,
@@ -155,19 +179,6 @@ export default async function DashboardPage({
           } as Activity))} />
         </div>
       </div>
-
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold">Recent Reviews</h2>
-          <Suspense fallback={<div className="h-10 w-48 bg-muted animate-pulse rounded-md" />}>
-            <FilterBar currentStatus={status} currentSort={sort} />
-          </Suspense>
-        </div>
-        
-        <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
-          <ReviewList reviews={reviews} />
-        </div>
-      </div>
-    </div>
+    </>
   );
 }

@@ -3,6 +3,7 @@
 import { useEffect, useReducer, useCallback, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "sonner";
 import type { ReviewResult, ReviewComment } from "@/types";
 import SeverityBadge from "@/components/review/SeverityBadge";
 import CategoryBadge from "@/components/review/CategoryBadge";
@@ -125,6 +126,29 @@ export default function ReviewPage() {
     }
   }, [state.status, fetchDiff, diff]);
 
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success("Link copied to clipboard!");
+    } catch {
+      toast.error("Failed to copy link");
+    }
+  };
+
+  const handleExport = () => {
+    if (!state.review?.result) return;
+    const dataStr = JSON.stringify(state.review.result, null, 2);
+    const dataBlob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `pr-review-${reviewId}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Report exported successfully!");
+  };
+
   if (state.status === "loading") {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
@@ -144,11 +168,20 @@ export default function ReviewPage() {
         <p className="text-muted-foreground mb-8">
           Our AI is currently chunking the diff and performing security & scalability audits.
         </p>
-        <div className="w-full space-y-2">
-          <Progress value={45} className="h-2" />
-          <p className="text-xs text-muted-foreground">
-            Processing {state.review?.chunksCount || "?"} code blocks...
-          </p>
+        
+        <div className="w-full space-y-4 text-left border rounded-xl p-4 bg-muted/30">
+          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+            <span className="animate-pulse">Processing code blocks...</span>
+          </div>
+          
+          <div className="space-y-2">
+            <Progress value={state.review?.chunksCount ? 65 : 30} className="h-1.5" />
+            <div className="flex justify-between text-xs text-muted-foreground font-mono">
+              <span>{state.review?.chunksCount ? `Chunks: ${state.review.chunksCount}` : "Initializing..."}</span>
+              <span>{state.review?.linesCount ? `Lines: ${state.review.linesCount}` : ""}</span>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -188,8 +221,12 @@ export default function ReviewPage() {
             </div>
           </div>
           <div className="flex gap-2 w-full md:w-auto">
-            <Button variant="outline" className="flex-1 md:flex-none"><Share2 className="mr-2 h-4 w-4" /> Share</Button>
-            <Button className="flex-1 md:flex-none"><Download className="mr-2 h-4 w-4" /> Export Report</Button>
+            <Button variant="outline" className="flex-1 md:flex-none" onClick={handleShare}>
+              <Share2 className="mr-2 h-4 w-4" /> Share
+            </Button>
+            <Button className="flex-1 md:flex-none" onClick={handleExport}>
+              <Download className="mr-2 h-4 w-4" /> Export Report
+            </Button>
           </div>
         </div>
 
@@ -299,22 +336,28 @@ function MetricCard({ icon: Icon, label, value, color }: { icon: React.ElementTy
 
 function CommentCard({ comment }: { comment: ReviewComment }) {
   return (
-    <div className="flex flex-col md:flex-row gap-4 p-6 rounded-2xl border bg-card hover:bg-muted/30 transition-colors group relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-1 h-full bg-primary/20 group-hover:bg-primary transition-colors" />
+    <div className="flex flex-col md:flex-row gap-4 p-5 rounded-2xl border bg-card hover:border-primary/30 transition-all group relative overflow-hidden shadow-sm">
+      <div className="absolute top-0 left-0 w-1.5 h-full bg-primary/20 group-hover:bg-primary transition-colors" />
       
-      <div className="flex-1 space-y-4">
+      <div className="flex-1 space-y-4 ml-1">
         <div className="flex flex-wrap items-center gap-3">
           <SeverityBadge severity={comment.severity} />
           <CategoryBadge category={comment.category || "quality"} />
-          <div className="flex items-center gap-2 text-sm font-mono text-muted-foreground">
-            <FileCode className="w-4 h-4" />
+          <div className="flex items-center gap-1.5 text-sm font-mono text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-md">
+            <FileCode className="w-3.5 h-3.5" />
             {comment.file}{comment.line ? `:${comment.line}` : ""}
           </div>
         </div>
         
-        <div className="space-y-2">
-          <h4 className="font-bold text-lg leading-tight">{comment.issue}</h4>
-          <p className="text-muted-foreground leading-relaxed">{comment.recommendation}</p>
+        <div className="space-y-3">
+          <div>
+            <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Issue</h4>
+            <p className="font-semibold text-base leading-snug">{comment.issue}</p>
+          </div>
+          <div className="pt-3 border-t border-muted/50">
+            <h4 className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider mb-1">Recommendation</h4>
+            <p className="text-muted-foreground leading-relaxed text-sm">{comment.recommendation}</p>
+          </div>
         </div>
       </div>
     </div>

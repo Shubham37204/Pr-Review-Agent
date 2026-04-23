@@ -44,41 +44,30 @@ export default function DiffViewer({
   if (!diff) return null;
 
   return (
-    <pre
-      style={{
-        fontFamily: "monospace",
-        fontSize: "12px",
-        padding: "12px",
-        overflowX: "auto",
-        backgroundColor: "#f6f8fa",
-        borderRadius: "6px",
-      }}
-    >
+    <pre className="font-mono text-xs p-3 overflow-x-auto bg-card border rounded-md">
       {lines.map((line) => {
-        let backgroundColor = "transparent";
-        let fontWeight: "normal" | "bold" = "normal";
+        let lineClass = "px-1.5 py-0.5 border-l-[3px] border-transparent ";
 
-        if (line.type === "added") backgroundColor = "#e6ffed";
-        if (line.type === "removed") backgroundColor = "#ffeef0";
-        if (line.type === "header") {
-          backgroundColor = "#eee";
-          fontWeight = "bold";
+        if (line.type === "added") {
+          lineClass += "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300";
+        } else if (line.type === "removed") {
+          lineClass += "bg-rose-500/15 text-rose-800 dark:text-rose-300";
+        } else if (line.type === "header") {
+          lineClass += "bg-muted font-bold text-muted-foreground";
+        } else {
+          lineClass += "text-foreground";
         }
 
         const isHighlighted =
           line.lineNumber !== undefined &&
           highlightedLines.includes(line.lineNumber);
 
+        if (isHighlighted) {
+          lineClass = lineClass.replace("border-transparent", "border-primary");
+        }
+
         return (
-          <div
-            key={line.lineNumber}
-            style={{
-              backgroundColor,
-              fontWeight,
-              padding: "2px 6px",
-              borderLeft: isHighlighted ? "3px solid #0070f3" : "none",
-            }}
-          >
+          <div key={line.lineNumber} className={lineClass}>
             {line.content}
           </div>
         );

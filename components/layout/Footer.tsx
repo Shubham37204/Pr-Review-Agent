@@ -1,32 +1,15 @@
 import Link from "next/link";
-import { GitPullRequest, Mail } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="border-t bg-muted/30 py-8">
-      <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} PR Review Agent. Built for engineering excellence.
-          </div>
-          
-          <div className="flex items-center gap-6">
-            <Link 
-              href="https://github.com/Shubham37204/Pr-Review-Agent" 
-              target="_blank"
-              className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"
-            >
-              <GitPullRequest className="w-4 h-4" />
-              <span>GitHub</span>
-            </Link>
-            <Link 
-              href="mailto:contact@example.com" 
-              className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"
-            >
-              <Mail className="w-4 h-4" />
-              <span>Contact</span>
-            </Link>
-          </div>
+    <footer className="border-t bg-card/50 py-6 mt-8">
+      <div className="container mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground text-center md:text-left">
+          <Sparkles className="w-4 h-4 text-primary shrink-0" />
+          <span>
+            <strong>PR Review Agent</strong> — AI-powered code reviews. Built with Next.js, Prisma, and Groq.
+          </span>
         </div>
       </div>
     </footer>

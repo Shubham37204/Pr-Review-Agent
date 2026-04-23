@@ -38,13 +38,11 @@ async function processReviewJob(job: Job<ReviewJobData>) {
     const chunks = chunkDiff(prData.diff);
     const totalLines = prData.diff.split("\n").length;
 
-    console.log(
-      logger.info("Review started", {
-        reviewId,
-        chunks: chunks.length,
-        lines: totalLines,
-      }),
-    );
+    logger.info("Review started", {
+      reviewId,
+      chunks: chunks.length,
+      lines: totalLines,
+    });
 
     // 4. Initial progress
     await job.updateProgress(10);

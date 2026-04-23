@@ -268,12 +268,12 @@ export default async function LandingPage() {
         </section>
 
         {/* ── CTA ── */}
-        <section id="technical" className="bg-foreground text-background">
+        <section id="technical" className="border-t bg-card/60">
           <div className="max-w-6xl mx-auto px-6 py-20 text-center space-y-6">
-            <h2 className="text-4xl md:text-5xl font-black tracking-tight">
+            <h2 className="text-4xl md:text-5xl font-black tracking-tight text-foreground">
               Ready to review smarter?
             </h2>
-            <p className="text-lg opacity-70 max-w-xl mx-auto">
+            <p className="text-lg text-muted-foreground max-w-xl mx-auto">
               Start for free. No credit card. No setup. Just paste a PR URL and see what a senior engineer sees.
             </p>
             <Link href="/sign-up">

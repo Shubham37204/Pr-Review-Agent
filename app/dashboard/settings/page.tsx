@@ -16,6 +16,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 
+export const dynamic = "force-dynamic";
+
 const DAILY_REVIEW_LIMIT = 10;
 
 export default async function UsagePage() {
@@ -202,9 +204,9 @@ export default async function UsagePage() {
       {/* Analysis Focus Areas (informational) */}
       <Card>
         <CardHeader>
-          <CardTitle>Review Focus Areas</CardTitle>
+          <CardTitle>What We Look For</CardTitle>
           <CardDescription>
-            Every PR analysis covers these three engineering dimensions automatically.
+            Behind the scenes, we test your code against these three key areas.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -212,24 +214,24 @@ export default async function UsagePage() {
             {[
               {
                 icon: Zap,
-                label: "Scalability",
+                label: "Performance",
                 color: "text-amber-500",
                 bg: "bg-amber-500/10",
-                desc: "Detects blocking calls, N+1 queries, and architecture patterns that won't scale past 10k users.",
+                desc: "We make sure your code won't slow down when your app gets popular. We look for heavy database queries and slow loops.",
               },
               {
                 icon: ShieldCheck,
                 label: "Security",
                 color: "text-emerald-500",
                 bg: "bg-emerald-500/10",
-                desc: "Scans for hardcoded secrets, missing input validation, and OWASP Top 10 vulnerabilities.",
+                desc: "We check if your code is safe from common attacks, like missing validation or accidentally exposed secrets.",
               },
               {
                 icon: Code2,
                 label: "Code Quality",
                 color: "text-blue-500",
                 bg: "bg-blue-500/10",
-                desc: "Checks SOLID principles, TypeScript strictness, error handling, and naming conventions.",
+                desc: "We ensure your code is clean, easy to read, and follows modern best practices so your team can maintain it easily.",
               },
             ].map((area) => (
               <div key={area.label} className="flex gap-4 p-4 rounded-xl border bg-muted/20">

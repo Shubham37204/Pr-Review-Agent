@@ -23,7 +23,7 @@ export default function Navbar() {
 
   const handleSignOut = async () => {
     await signOut();
-    router.push("/sign-in");
+    router.push("/");
   };
 
   return (
