@@ -32,8 +32,13 @@ export default function PRInputForm() {
       });
 
       if (res.ok) {
+        const data = await res.json();
         setUrl("");
-        router.refresh();
+        router.push(`/review/${data.reviewId}`);
+      } else if (res.status === 409) {
+        const data = await res.json();
+        // PR already reviewed — navigate to existing review
+        router.push(`/review/${data.existingReviewId}`);
       } else {
         const data = await res.json();
         alert(data.error || "Failed to start review");

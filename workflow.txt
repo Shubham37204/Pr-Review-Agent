@@ -1,0 +1,39 @@
+PR REVIEW AGENT - SYSTEM WORKFLOW
+================================
+
+This document explains the end-to-end technical workflow of the PR Review Agent.
+
+1. INPUT PHASE (User Submission)
+-------------------------------
+- User provides a GitHub Pull Request URL via the Dashboard.
+- The system validates the URL and ensures it points to a public repository (for now).
+- A new 'Review' record is created in the PostgreSQL database (via Prisma) with status 'PENDING'.
+
+2. PROCESSING PHASE (Background Worker)
+--------------------------------------
+- To handle potentially large PRs and avoid blocking the main UI thread, the review request is added to a BullMQ queue.
+- A Redis-backed worker picks up the job.
+- The worker fetches the PR diff using the GitHub REST API.
+- The diff is split into manageable 'chunks' to optimize for LLM context windows and token limits.
+
+3. ANALYSIS PHASE (Agentic AI)
+-----------------------------
+- The chunks are sent to the Groq API (utilizing DeepMind-inspired prompt engineering).
+- The AI Agent performs a 3-layer analysis:
+    a) SCALABILITY: Checks for O(n^2) loops, database bottlenecks, and memory leaks.
+    b) SECURITY: Scans for hardcoded secrets, insecure auth patterns, and OWASP risks.
+    c) CODE QUALITY: Evaluates SOLID principles, type safety, and maintainability.
+- The Agent generates a quality score (0-100) and actionable feedback.
+
+4. COMPLETION PHASE (UI Update)
+------------------------------
+- Once the AI analysis is finished, the worker updates the Review record in the database to 'COMPLETED'.
+- The Dashboard UI (built with Next.js App Router) reflects the update in real-time or upon refresh.
+- Users can view detailed metrics, sentiment splits, and score trends via Recharts visualizations.
+
+TECHNICAL STACK:
+- Frontend: Next.js 15, Tailwind CSS, Lucide Icons, Shadcn/UI.
+- Backend: Next.js API Routes, BullMQ (Task Queue), Redis (Messaging).
+- Database: PostgreSQL (via Prisma ORM).
+- AI: Groq SDK (Llama/Mixtral models).
+- Auth: Clerk.

@@ -29,7 +29,8 @@ export async function GET(
     }
 
     // 2. Get reviewId from params
-    const { id: reviewId } = await params;
+    const { id } = await params;
+    reviewId = id;
 
     // 3. Fetch review from DB
     const review = await prisma.review.findUnique({

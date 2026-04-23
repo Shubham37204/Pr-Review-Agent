@@ -7,8 +7,9 @@ import PRInputForm from "@/components/review/PRInputForm";
 import FilterBar from "@/components/review/FilterBar";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { OverviewCharts } from "@/components/dashboard/OverviewCharts";
-import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
-import { Activity, Code, History, Star } from "lucide-react";
+import { ActivityFeed, type Activity } from "@/components/dashboard/ActivityFeed";
+import { Activity as ActivityIcon, Code, History, Star } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 const DAILY_REVIEW_LIMIT = 10;
 
@@ -112,7 +113,7 @@ export default async function DashboardPage({
         <StatCard 
           title="Daily Usage" 
           value={`${reviewCountToday} / ${DAILY_REVIEW_LIMIT}`} 
-          icon={Activity}
+          icon={ActivityIcon}
           description="Reviews performed today"
           trend={{ value: `${Math.round((reviewCountToday / DAILY_REVIEW_LIMIT) * 100)}%`, positive: reviewCountToday < DAILY_REVIEW_LIMIT }}
         />
@@ -139,10 +140,19 @@ export default async function DashboardPage({
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <OverviewCharts />
+          <OverviewCharts reviews={finalReviews} />
         </div>
         <div className="lg:col-span-1">
-          <ActivityFeed />
+          <ActivityFeed activities={finalReviews.slice(0, 5).map(review => ({
+            id: review.id,
+            type: review.status.toLowerCase(),
+            title: review.status === "COMPLETED" ? "Review Completed" : `Review ${review.status.charAt(0) + review.status.slice(1).toLowerCase()}`,
+            description: review.status === "COMPLETED" 
+              ? `${review.prTitle || "PR Analysis"} scored ${(review.result as ReviewScoreShape)?.score}/100`
+              : `Analysis for ${review.prTitle || "PR Analysis"} is ${review.status.toLowerCase()}`,
+            time: formatDistanceToNow(new Date(review.createdAt), { addSuffix: true }),
+            status: review.status === "COMPLETED" ? "completed" : (review.status === "FAILED" ? "flagged" : "processing")
+          } as Activity))} />
         </div>
       </div>
 

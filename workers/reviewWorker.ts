@@ -78,6 +78,7 @@ async function processReviewJob(job: Job<ReviewJobData>) {
         result: finalResult as unknown as Prisma.InputJsonValue,
         linesCount: totalLines,
         chunksCount: chunks.length,
+        prTitle: prData.title,
       },
     });
 
