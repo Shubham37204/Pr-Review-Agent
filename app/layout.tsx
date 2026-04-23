@@ -2,13 +2,15 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "sonner";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "PR Review Agent | Advanced Code Insights",
-  description: "AI-powered code review for GitHub Pull Requests. Scalable, secure, and developer-centric.",
+  title: "PR Review Agent | AI Code Review",
+  description:
+    "AI-powered PR Review Agent that thinks like a senior engineer. Get actionable feedback on scalability, security, and performance in seconds.",
 };
 
 export default function RootLayout({
@@ -19,14 +21,25 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
-        <body className={inter.className}>
+        <body className={inter.variable}>
           <ThemeProvider
             attribute="class"
-            defaultTheme="system"
+            defaultTheme="light"
             enableSystem
             disableTransitionOnChange
           >
             {children}
+            <Toaster
+              position="bottom-right"
+              richColors
+              closeButton
+              toastOptions={{
+                style: {
+                  fontFamily: "var(--font-sans)",
+                  borderRadius: "12px",
+                },
+              }}
+            />
           </ThemeProvider>
         </body>
       </html>

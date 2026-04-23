@@ -1,105 +1,144 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
-import { ArrowRight, Code2, ShieldCheck, Zap, GitPullRequest, Layers, Cpu, Globe } from "lucide-react";
+import { ArrowRight, GitPullRequest, Zap, ShieldCheck, Code2, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Logo from "@/components/brand/Logo";
 import Footer from "@/components/layout/Footer";
 
 export default async function LandingPage() {
   const { userId } = await auth();
-
-  if (userId) {
-    redirect("/dashboard");
-  }
+  if (userId) redirect("/dashboard");
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      {/* Navbar */}
-      <header className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+      {/* ── Navbar ── */}
+      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/60">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Logo />
-          <div className="flex items-center gap-6">
-            <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground">
-              <Link href="#features" className="hover:text-primary transition-colors">Features</Link>
-              <Link href="#technical" className="hover:text-primary transition-colors">Technical Stack</Link>
-              <Link href="https://github.com/Shubham37204/Pr-Review-Agent" target="_blank" className="hover:text-primary transition-colors">GitHub</Link>
-            </nav>
-            <div className="h-6 w-px bg-border hidden md:block" />
-            <div className="flex items-center gap-3">
-              <Link href="/sign-in">
-                <Button variant="ghost" size="sm">Sign In</Button>
-              </Link>
-              <Link href="/sign-up">
-                <Button size="sm" className="bg-primary hover:bg-primary/90">Get Started</Button>
-              </Link>
-            </div>
+          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
+            <Link href="#features" className="hover:text-foreground transition-colors">Features</Link>
+            <Link href="#technical" className="hover:text-foreground transition-colors">How It Works</Link>
+            <Link href="https://github.com/Shubham37204/Pr-Review-Agent" target="_blank" className="hover:text-foreground transition-colors">GitHub</Link>
+          </nav>
+          <div className="flex items-center gap-3">
+            <Link href="/sign-in">
+              <Button variant="ghost" size="sm" className="font-medium">Sign In</Button>
+            </Link>
+            <Link href="/sign-up">
+              <Button size="sm" className="font-semibold shadow-md shadow-primary/25 px-5">
+                Get Started
+              </Button>
+            </Link>
           </div>
         </div>
       </header>
 
       <main className="flex-1">
-        {/* Hero Section */}
-        <section className="relative py-24 md:py-32 overflow-hidden">
-          <div className="container mx-auto px-4 relative z-10">
-            <div className="flex flex-col lg:flex-row items-center gap-16">
-              <div className="flex-1 text-center lg:text-left space-y-8">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider animate-in fade-in slide-in-from-bottom-2 duration-500">
-                  <Zap className="w-3 h-3" /> Powered by Advanced Agentic AI
-                </div>
-                <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-[0.9] animate-in fade-in slide-in-from-bottom-4 duration-700">
-                  ONE AGENT.<br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-emerald-400 to-blue-500">
-                    SENIOR INSIGHTS.
-                  </span>
+        {/* ── Hero ── */}
+        <section className="max-w-6xl mx-auto px-6 pt-20 pb-16 md:pt-28 md:pb-20">
+          <div className="flex flex-col lg:flex-row items-center gap-16">
+            {/* Left — copy */}
+            <div className="flex-1 space-y-7 text-center lg:text-left">
+              <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1.5 rounded-full">
+                <Zap className="w-3 h-3" /> AI Code Review
+              </span>
+
+              <div className="space-y-2">
+                <h1 className="text-5xl md:text-6xl font-black leading-[1.05] tracking-tight text-foreground">
+                  One agent.
                 </h1>
-                <p className="text-xl text-muted-foreground max-w-2xl mx-auto lg:mx-0 leading-relaxed animate-in fade-in slide-in-from-bottom-6 duration-1000">
-                  Automate your security, scalability, and code quality reviews. 
-                  Built for engineering teams that ship with confidence and recruiters 
-                  looking for top-tier architectural depth.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start animate-in fade-in slide-in-from-bottom-8 duration-1000">
-                  <Link href="/sign-up">
-                    <Button size="lg" className="h-14 px-8 text-lg font-bold shadow-xl shadow-primary/20 hover:scale-105 transition-transform">
-                      Analyze My First PR <ArrowRight className="ml-2 w-5 h-5" />
-                    </Button>
-                  </Link>
-                  <Link href="https://github.com/Shubham37204/Pr-Review-Agent" target="_blank">
-                    <Button size="lg" variant="outline" className="h-14 px-8 text-lg font-bold hover:bg-muted transition-colors">
-                      <GitPullRequest className="mr-2 w-5 h-5" /> View on GitHub
-                    </Button>
-                  </Link>
-                </div>
-                <div className="flex items-center justify-center lg:justify-start gap-4 pt-4">
-                  <div className="flex -space-x-3">
-                    {[1,2,3,4].map(i => (
-                      <div key={i} className="w-10 h-10 rounded-full border-2 border-background bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground uppercase">
-                        {String.fromCharCode(64 + i)}
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    <span className="font-bold text-foreground">Built for</span> curious minds, developers & creators
-                  </p>
-                </div>
+                <h1 className="text-5xl md:text-6xl font-black leading-[1.05] tracking-tight text-primary">
+                  Senior insights.
+                </h1>
               </div>
 
-              <div className="flex-1 relative animate-in zoom-in duration-1000">
-                <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-emerald-500/20 blur-3xl -z-10 rounded-full" />
-                <div className="relative rounded-3xl border bg-card/50 backdrop-blur-sm p-4 shadow-2xl shadow-primary/10 overflow-hidden group">
-                  <Image 
-                    src="/pr_agent_landing_hero_asset_1776912883627.png" 
-                    alt="AI PR Analysis Visualization" 
-                    width={800} 
-                    height={600}
-                    className="rounded-2xl object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                  <div className="absolute bottom-8 right-8 p-4 bg-background/90 backdrop-blur rounded-xl border shadow-lg animate-bounce">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <p className="text-xs font-bold uppercase tracking-tighter">Analyzing PR #124...</p>
+              <p className="text-lg text-muted-foreground leading-relaxed max-w-lg mx-auto lg:mx-0">
+                Paste a GitHub PR URL and get a full engineering-grade review — covering{" "}
+                <Link href="#features" className="text-primary underline-offset-2 hover:underline">scalability</Link>,{" "}
+                <Link href="#features" className="text-primary underline-offset-2 hover:underline">security</Link>, and{" "}
+                <Link href="#features" className="text-primary underline-offset-2 hover:underline">code quality</Link>{" "}
+                — in under 10 seconds. No switching tabs, no manual review.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start pt-2">
+                <Link href="/sign-up">
+                  <Button size="lg" className="h-12 px-8 font-bold shadow-lg shadow-primary/25 hover:scale-[1.02] transition-transform">
+                    Start for free <ArrowRight className="ml-2 w-4 h-4" />
+                  </Button>
+                </Link>
+                <Link href="#features">
+                  <Button size="lg" variant="outline" className="h-12 px-6 font-semibold">
+                    See features <ChevronDown className="ml-2 w-4 h-4" />
+                  </Button>
+                </Link>
+              </div>
+
+              {/* Social proof */}
+              <div className="flex items-center justify-center lg:justify-start gap-3 pt-1">
+                <div className="flex -space-x-2">
+                  {["A","B","C","D"].map((l, i) => (
+                    <div key={i} className="w-8 h-8 rounded-full bg-primary/20 border-2 border-background flex items-center justify-center text-[10px] font-black text-primary">
+                      {l}
                     </div>
+                  ))}
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Built for <span className="font-semibold text-foreground">curious minds</span>, developers &amp; creators
+                </p>
+              </div>
+            </div>
+
+            {/* Right — visual */}
+            <div className="flex-1 w-full max-w-lg lg:max-w-none">
+              <div className="relative">
+                {/* Glow */}
+                <div className="absolute inset-0 bg-primary/10 blur-3xl rounded-full scale-75" />
+                {/* Mock terminal card */}
+                <div className="relative rounded-2xl border bg-card shadow-2xl shadow-black/5 overflow-hidden">
+                  {/* Terminal top bar */}
+                  <div className="flex items-center gap-2 px-4 py-3 border-b bg-muted/40">
+                    <div className="w-3 h-3 rounded-full bg-rose-400" />
+                    <div className="w-3 h-3 rounded-full bg-amber-400" />
+                    <div className="w-3 h-3 rounded-full bg-emerald-400" />
+                    <span className="ml-2 text-xs font-mono text-muted-foreground">PR Analysis — score: 87/100</span>
+                  </div>
+                  <div className="p-6 font-mono text-sm space-y-4">
+                    <div className="flex items-start gap-3">
+                      <span className="text-emerald-500 font-bold shrink-0">✔</span>
+                      <div>
+                        <p className="font-semibold text-foreground">Scalability</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">No blocking sync calls detected. Queue usage is optimal.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <span className="text-amber-500 font-bold shrink-0">⚠</span>
+                      <div>
+                        <p className="font-semibold text-foreground">Security</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Hardcoded API key found in <code className="bg-muted px-1 rounded">config.ts:14</code>. Use env vars.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <span className="text-emerald-500 font-bold shrink-0">✔</span>
+                      <div>
+                        <p className="font-semibold text-foreground">Code Quality</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">SOLID principles followed. Type coverage: 94%.</p>
+                      </div>
+                    </div>
+                    <div className="pt-2 border-t">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">Overall Score</span>
+                        <span className="font-black text-primary text-lg">87 / 100</span>
+                      </div>
+                      <div className="mt-2 h-2 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full bg-primary rounded-full" style={{ width: "87%" }} />
+                      </div>
+                    </div>
+                  </div>
+                  {/* Live pulse badge */}
+                  <div className="absolute top-16 right-4 flex items-center gap-1.5 bg-background border rounded-full px-3 py-1 shadow-md text-xs font-semibold">
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                    Analyzing PR #124
                   </div>
                 </div>
               </div>
@@ -107,75 +146,141 @@ export default async function LandingPage() {
           </div>
         </section>
 
-        {/* Stats Section */}
-        <section className="py-12 border-y bg-muted/30">
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        {/* ── Stats bar ── */}
+        <section className="border-y bg-card/60">
+          <div className="max-w-6xl mx-auto px-6 py-10">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
               {[
-                { label: "AI Analysis Layers", value: "3+", icon: Layers },
-                { label: "DeepMind Inspired", value: "100%", icon: Cpu },
-                { label: "Avg Review Time", value: "<10s", icon: Zap },
-                { label: "Scalable Core", value: "Active", icon: Globe },
-              ].map((stat, i) => (
-                <div key={i} className="text-center space-y-2">
-                  <div className="inline-flex p-2 bg-background rounded-lg border mb-2">
-                    <stat.icon className="w-4 h-4 text-primary" />
-                  </div>
-                  <p className="text-3xl font-black tracking-tighter">{stat.value}</p>
-                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">{stat.label}</p>
+                { value: "< 10s", label: "Avg review time" },
+                { value: "3", label: "AI analysis layers" },
+                { value: "100%", label: "Free to start" },
+                { value: "10k+", label: "Lines analyzed" },
+              ].map((s) => (
+                <div key={s.label} className="space-y-1">
+                  <p className="text-3xl font-black text-primary tabular-nums">{s.value}</p>
+                  <p className="text-sm text-muted-foreground font-medium">{s.label}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Technical Overview Section */}
-        <section id="technical" className="py-24 bg-background">
-          <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto text-center mb-20 space-y-4">
-              <h2 className="text-sm font-bold text-primary uppercase tracking-[0.2em]">Engineering Excellence</h2>
-              <h3 className="text-4xl md:text-5xl font-black tracking-tighter">Not another ChatGPT wrapper.</h3>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                PR Review Agent is architected for production-grade reliability. 
-                Instead of switching between multiple tools, everything lives here—from 
-                asynchronous background processing to deep security audits.
+        {/* ── About ── */}
+        <section className="max-w-6xl mx-auto px-6 py-20">
+          <div className="rounded-2xl border bg-card p-8 md:p-12 flex flex-col md:flex-row gap-10">
+            <div className="flex-1 space-y-4">
+              <p className="text-xs font-bold uppercase tracking-widest text-primary">About</p>
+              <h2 className="text-3xl md:text-4xl font-black tracking-tight">
+                Not another ChatGPT wrapper.
+              </h2>
+              <p className="text-muted-foreground leading-relaxed">
+                PR Review Agent is built for engineers who actually care about production quality. Instead of copy-pasting code into a chat box, you get structured, actionable feedback tied to specific files and line numbers. Purpose-built, not a blank chat box.
               </p>
             </div>
-
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="p-10 rounded-[2.5rem] border bg-card hover:shadow-2xl hover:shadow-primary/5 transition-all group">
-                <div className="w-14 h-14 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
-                  <Zap className="w-7 h-7" />
+            <div className="grid grid-cols-2 gap-4 shrink-0">
+              {[
+                { value: "3+", label: "AI analysis layers" },
+                { value: "100%", label: "Free to start" },
+                { value: "< 10s", label: "Avg response" },
+                { value: "Open", label: "Source code" },
+              ].map((s) => (
+                <div key={s.label} className="bg-muted/50 rounded-xl p-5 text-center">
+                  <p className="text-2xl font-black text-primary tabular-nums">{s.value}</p>
+                  <p className="text-xs text-muted-foreground font-medium mt-1">{s.label}</p>
                 </div>
-                <h4 className="text-2xl font-bold mb-4 tracking-tight">Scalable Architecture</h4>
-                <p className="text-muted-foreground leading-relaxed">
-                  Utilizes BullMQ and Redis for asynchronous background processing, 
-                  ensuring the main thread remains responsive even during heavy diff analysis.
-                </p>
-              </div>
-
-              <div className="p-10 rounded-[2.5rem] border bg-card hover:shadow-2xl hover:shadow-primary/5 transition-all group">
-                <div className="w-14 h-14 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
-                  <ShieldCheck className="w-7 h-7" />
-                </div>
-                <h4 className="text-2xl font-bold mb-4 tracking-tight">Security Focused</h4>
-                <p className="text-muted-foreground leading-relaxed">
-                  Automated detection of hardcoded secrets, insecure patterns, and 
-                  OWASP vulnerabilities before code ever hits production.
-                </p>
-              </div>
-
-              <div className="p-10 rounded-[2.5rem] border bg-card hover:shadow-2xl hover:shadow-primary/5 transition-all group">
-                <div className="w-14 h-14 bg-amber-500/10 text-amber-500 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
-                  <Code2 className="w-7 h-7" />
-                </div>
-                <h4 className="text-2xl font-bold mb-4 tracking-tight">Skill-Based Insights</h4>
-                <p className="text-muted-foreground leading-relaxed">
-                  Evaluates code for type safety, SOLID principles, and cyclomatic 
-                  complexity, providing feedback that improves overall code quality.
-                </p>
-              </div>
+              ))}
             </div>
+          </div>
+        </section>
+
+        {/* ── Features ── */}
+        <section id="features" className="max-w-6xl mx-auto px-6 pb-20">
+          <div className="text-center mb-14 space-y-3">
+            <p className="text-xs font-bold uppercase tracking-widest text-primary">Features</p>
+            <h2 className="text-3xl md:text-4xl font-black tracking-tight">What you can do here</h2>
+            <p className="text-muted-foreground">Sign in to access all features — no credit card needed</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-5">
+            {[
+              {
+                icon: Zap,
+                iconBg: "bg-amber-50 dark:bg-amber-900/20",
+                iconColor: "text-amber-500",
+                title: "Scalability Audit",
+                desc: "Identifies blocking sync calls, N+1 queries, and patterns that will fail at 10k users. Get queue suggestions automatically.",
+                highlight: "auto-queue suggestions",
+              },
+              {
+                icon: ShieldCheck,
+                iconBg: "bg-emerald-50 dark:bg-emerald-900/20",
+                iconColor: "text-emerald-500",
+                title: "Security Scan",
+                desc: "Detects hardcoded secrets, missing input validation, and OWASP Top 10 vulnerabilities before code hits production.",
+                highlight: "OWASP Top 10 coverage",
+              },
+              {
+                icon: Code2,
+                iconBg: "bg-blue-50 dark:bg-blue-900/20",
+                iconColor: "text-blue-500",
+                title: "Code Quality Score",
+                desc: "Evaluates SOLID principles, TypeScript coverage, and naming conventions. Returns a 0–100 quality score per chunk.",
+                highlight: "0–100 quality score",
+              },
+              {
+                icon: GitPullRequest,
+                iconBg: "bg-primary/10",
+                iconColor: "text-primary",
+                title: "Auto Webhook Review",
+                desc: "Configure a GitHub webhook and every new PR is automatically queued for review — zero manual steps.",
+                highlight: "zero manual steps",
+              },
+              {
+                icon: ArrowRight,
+                iconBg: "bg-rose-50 dark:bg-rose-900/20",
+                iconColor: "text-rose-500",
+                title: "Score Comparison",
+                desc: "Re-review a PR after fixing issues and see the exact improvement. Track how your code evolves over iterations.",
+                highlight: "track improvements",
+              },
+              {
+                icon: Zap,
+                iconBg: "bg-violet-50 dark:bg-violet-900/20",
+                iconColor: "text-violet-500",
+                title: "BullMQ Background Jobs",
+                desc: "Large PRs are chunked and processed asynchronously — the UI never blocks. Built on Redis for reliability.",
+                highlight: "never blocks the UI",
+              },
+            ].map((f) => (
+              <div key={f.title} className="group rounded-2xl border bg-card p-6 hover:shadow-lg hover:shadow-black/5 transition-all hover:-translate-y-0.5">
+                <div className={`w-10 h-10 rounded-xl ${f.iconBg} flex items-center justify-center mb-5`}>
+                  <f.icon className={`w-5 h-5 ${f.iconColor}`} />
+                </div>
+                <h3 className="font-bold text-base mb-2">{f.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {f.desc.replace(f.highlight, "")}
+                  <span className={`font-semibold ${f.iconColor}`}>{f.highlight}</span>
+                  {"."}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── CTA ── */}
+        <section id="technical" className="bg-foreground text-background">
+          <div className="max-w-6xl mx-auto px-6 py-20 text-center space-y-6">
+            <h2 className="text-4xl md:text-5xl font-black tracking-tight">
+              Ready to review smarter?
+            </h2>
+            <p className="text-lg opacity-70 max-w-xl mx-auto">
+              Start for free. No credit card. No setup. Just paste a PR URL and see what a senior engineer sees.
+            </p>
+            <Link href="/sign-up">
+              <Button size="lg" className="h-13 px-10 font-bold bg-primary text-white hover:bg-primary/90 shadow-2xl mt-4">
+                Analyze My First PR <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </Link>
           </div>
         </section>
       </main>
