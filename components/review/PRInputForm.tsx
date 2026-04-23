@@ -2,126 +2,85 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
-interface ExistingReview {
-  existingReviewId: string;
-  status: string;
-  message: string;
-}
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search, Loader2, Plus } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export default function PRInputForm() {
+  const [url, setUrl] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const [prUrl, setPrUrl] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [existingReview, setExistingReview] = useState<ExistingReview | null>(null);
-  const [remaining, setRemaining] = useState<number | null>(null);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!url) return;
 
-  const submitReview = async (forceReview: boolean) => {
-    if (!prUrl.trim()) {
-      setError("PR URL is required");
-      return;
-    }
-
+    setLoading(true);
     try {
-      setIsLoading(true);
-      setError(null);
-      setExistingReview(null);
-
       const res = await fetch("/api/review", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prUrl, forceReview }),
+        body: JSON.stringify({ prUrl: url }),
       });
 
-      // Read rate limit header regardless of status
-      const limitRemaining = res.headers.get("X-RateLimit-Remaining");
-      if (limitRemaining !== null) {
-        setRemaining(parseInt(limitRemaining, 10));
+      if (res.ok) {
+        setUrl("");
+        router.refresh();
+      } else {
+        const data = await res.json();
+        alert(data.error || "Failed to start review");
       }
-
-      // 429 — limit reached
-      if (res.status === 429) {
-        setError("Daily review limit reached");
-        return;
-      }
-
-      const data = await res.json().catch(() => ({}));
-
-      // 409 — existing review detected
-      if (res.status === 409) {
-        setExistingReview(data);
-        return;
-      }
-
-      // 202 — new review queued
-      if (res.status === 202) {
-        router.push(`/review/${data.reviewId}`);
-        return;
-      }
-
-      // Other non-ok responses
-      if (!res.ok) {
-        setError(data.error || "Failed to submit review");
-        return;
-      }
-
-      // Unexpected status fallback
-      setError("Unexpected response from server");
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+    } catch (err) {
+      alert("Something went wrong");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const handleSubmit = () => submitReview(false);
-
-  const handleForceReview = () => {
-    setExistingReview(null);
-    submitReview(true);
-  };
-
   return (
-    <div style={{ marginBottom: "20px" }}>
-      <input
-        type="text"
-        value={prUrl}
-        onChange={(e) => setPrUrl(e.target.value)}
-        placeholder="Paste GitHub PR URL"
-        disabled={isLoading}
-        style={{ padding: "8px", width: "300px", marginRight: "10px" }}
-      />
-
-      <button onClick={handleSubmit} disabled={isLoading}>
-        {isLoading ? "Submitting..." : "Review PR"}
-      </button>
-
-      {remaining !== null && (
-        <div style={{ marginTop: "8px", color: remaining <= 2 ? "red" : "black" }}>
-          {remaining} reviews remaining today
-        </div>
-      )}
-
-      {error && (
-        <div style={{ color: "red", marginTop: "8px" }}>{error}</div>
-      )}
-
-      {existingReview && (
-        <div style={{ marginTop: "12px" }}>
-          <div>
-            This PR was already reviewed (status: {existingReview.status})
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button className="shadow-lg shadow-primary/20">
+          <Plus className="mr-2 h-4 w-4" /> New Review
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Analyze Pull Request</DialogTitle>
+          <DialogDescription>
+            Paste the URL of a public GitHub Pull Request to start the AI analysis.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 py-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="https://github.com/owner/repo/pull/123"
+              className="pl-10 h-12"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              disabled={loading}
+            />
           </div>
-          <button
-            onClick={() => router.push(`/review/${existingReview.existingReviewId}`)}
-            style={{ marginRight: "10px", marginTop: "6px" }}
-          >
-            View Result
-          </button>
-          <button onClick={handleForceReview}>Re-review</button>
-        </div>
-      )}
-    </div>
+          <Button type="submit" className="w-full h-12" disabled={loading || !url}>
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...
+              </>
+            ) : (
+              "Start AI Review"
+            )}
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

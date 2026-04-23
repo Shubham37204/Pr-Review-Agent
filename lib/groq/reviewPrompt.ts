@@ -7,6 +7,7 @@ export interface ReviewComment {
   line?: number;
   issue: string;
   recommendation: string;
+  category: "scalability" | "security" | "quality" | "performance";
 }
 
 export interface ReviewResult {
@@ -14,12 +15,22 @@ export interface ReviewResult {
   comments: ReviewComment[];
   score: number;
   chunksProcessed: number;
+  metrics: {
+    scalabilityScore: number;
+    securityScore: number;
+    qualityScore: number;
+  };
 }
 
 const SYSTEM_PROMPT = `
 You are a senior software engineer performing a thorough code review.
 Analyze the given PR diff and return ONLY a valid JSON object.
-No markdown. No explanation. No backticks. Raw JSON only.
+
+Evaluate the code based on these core categories:
+1. SCALABILITY: Can this handle 10k+ users? Are there blocking sync calls? Suggest queue/background jobs if needed.
+2. CODE QUALITY: Check for missing error handling, lack of logging, weak testability, or poor folder structure.
+3. SECURITY: Look for missing input validation, hardcoded secrets, or OWASP vulnerabilities.
+4. BEST PRACTICES: Check for type safety, rate limiting, and API versioning.
 
 Return this exact shape:
 {
@@ -27,19 +38,20 @@ Return this exact shape:
   "comments": [
     {
       "severity": "critical" | "warning" | "suggestion",
+      "category": "scalability" | "security" | "quality" | "performance",
       "file": "filename",
       "line": number or null,
       "issue": "what is wrong",
       "recommendation": "what to do instead"
     }
   ],
-  "score": number between 0 and 100
+  "score": number between 0 and 100,
+  "metrics": {
+    "scalabilityScore": 0-100,
+    "securityScore": 0-100,
+    "qualityScore": 0-100
+  }
 }
-
-Severity rules:
-- critical: security issues, data loss risk, breaking bugs
-- warning: performance problems, bad patterns, missing error handling  
-- suggestion: style, naming, minor improvements
 `;
 
 export async function reviewChunk(chunk: DiffChunk): Promise<ReviewResult> {
@@ -92,8 +104,13 @@ export async function reviewChunk(chunk: DiffChunk): Promise<ReviewResult> {
 
     return {
       summary: parsed.summary || "",
-      comments: safeComments, // ← use safeComments, not parsed.comments
+      comments: safeComments,
       score: Math.min(100, Math.max(0, Number(parsed.score) || 0)),
+      metrics: {
+        scalabilityScore: Number(parsed.metrics?.scalabilityScore) || 0,
+        securityScore: Number(parsed.metrics?.securityScore) || 0,
+        qualityScore: Number(parsed.metrics?.qualityScore) || 0,
+      },
       chunksProcessed: 1,
     };
   } catch (error) {
@@ -111,10 +128,15 @@ export function mergeReviewResults(
 ): ReviewResult {
   if (!results.length) {
     return {
-    summary:"No review results available",
-    comments: [], 
-    score: 0,
-    chunksProcessed: 0,
+      summary: "No review results available",
+      comments: [],
+      score: 0,
+      metrics: {
+        scalabilityScore: 0,
+        securityScore: 0,
+        qualityScore: 0,
+      },
+      chunksProcessed: 0,
     };
   }
 
@@ -132,19 +154,33 @@ export function mergeReviewResults(
 
   const mergedComments = Array.from(commentMap.values());
 
-  // Average score
-  const avgScore =
-    results.reduce((sum, r) => sum + r.score, 0) / results.length;
-
   // Combine summaries
   const combinedSummary = results.map((r) => r.summary).join(" ");
 
-  // (Optional improvement: you can re-summarize using AI later)
+  // Average score and metrics
+  const avgScore =
+    results.reduce((sum, r) => sum + r.score, 0) / results.length;
+  
+  const avgMetrics = results.reduce(
+    (acc, r) => ({
+      scalabilityScore: acc.scalabilityScore + (r.metrics?.scalabilityScore || 0),
+      securityScore: acc.securityScore + (r.metrics?.securityScore || 0),
+      qualityScore: acc.qualityScore + (r.metrics?.qualityScore || 0),
+    }),
+    { scalabilityScore: 0, securityScore: 0, qualityScore: 0 }
+  );
+
+  const num = results.length;
 
   return {
     summary: combinedSummary,
     comments: mergedComments,
     score: Math.round(avgScore),
+    metrics: {
+      scalabilityScore: Math.round(avgMetrics.scalabilityScore / num),
+      securityScore: Math.round(avgMetrics.securityScore / num),
+      qualityScore: Math.round(avgMetrics.qualityScore / num),
+    },
     chunksProcessed: totalChunks,
   };
 }
