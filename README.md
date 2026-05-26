@@ -201,7 +201,6 @@ pr-review-agent/
 | Job retry policy | 3 attempts, exponential backoff (5 s, 10 s, 20 s) |
 | Queue deduplication | By `jobId = review-{reviewId}` |
 
----
 
 ## Webhook Setup
 
@@ -215,9 +214,3 @@ To auto-trigger reviews when a PR is opened:
 6. Click **Add webhook**
 
 The server verifies every request using SHA-256 HMAC (`timingSafeEqual` to prevent timing attacks).
-
----
-
-## License
-
-MIT — see [LICENSE](LICENSE)
